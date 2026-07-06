@@ -130,5 +130,4 @@ https://github.com/mbaffour/seqdedupe
 
 ## License
 
-[MIT](LICENSE)# SeqDedupe
-Shiny app in R for deduplication of FASTA sequences
+[GNU Affero General Public License v3 (AGPL-3.0)](LICENSE)

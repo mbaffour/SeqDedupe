@@ -35,7 +35,7 @@ install.packages(c("shiny", "DT", "digest", "ggplot2"))
 # Clone and run
 # git clone https://github.com/mbaffour/seqdedupe.git
 # cd seqdedupe
-shiny::runApp("app.R")
+shiny::runApp("App.R")
 ```
 
 ### Requirements
@@ -43,9 +43,14 @@ shiny::runApp("app.R")
 - R >= 4.0
 - Packages: `shiny`, `DT`, `digest`, `ggplot2`
 
+> The app checks that these packages are installed at startup and stops with a
+> clear message if any are missing — it does **not** auto-install them. This
+> keeps it safe to run under Shiny Server, Docker, and CI. Install the packages
+> with the `install.packages(...)` command above before launching.
+
 ## Quick Start
 
-1. Launch the app: `shiny::runApp("app.R")`
+1. Launch the app: `shiny::runApp("App.R")`
 2. Upload one or more FASTA/FASTQ files (an example file is included in `inst/extdata/`)
 3. Set filter thresholds (or leave defaults for deduplication only)
 4. Click **Run Pipeline**
@@ -56,7 +61,7 @@ shiny::runApp("app.R")
 
 ```r
 # Try with the included test files
-shiny::runApp("app.R")
+shiny::runApp("App.R")
 # Upload inst/extdata/example.fasta (nucleotide)
 #   12 sequences: 3 duplicates, 1 short junk, 1 ambiguous
 # Or upload inst/extdata/example_protein.fasta (protein)

@@ -12,8 +12,23 @@
 APP_VERSION <- "0.1.0"
 
 # --- Dependencies ------------------------------------------------------------
-for (pkg in c("shiny", "DT", "digest", "ggplot2")) {
-  if (!requireNamespace(pkg, quietly = TRUE)) install.packages(pkg)
+# Check for required CRAN packages without mutating the user's library.
+# Auto-installing at load time hangs or fails in non-interactive contexts
+# (Shiny Server, Docker, CI) and changes the library without consent, so we
+# only report what is missing and let the user install it themselves.
+.required_pkgs <- c("shiny", "DT", "digest", "ggplot2")
+.missing_pkgs <- .required_pkgs[
+  !vapply(.required_pkgs, requireNamespace, logical(1), quietly = TRUE)
+]
+if (length(.missing_pkgs) > 0) {
+  stop(
+    "Missing required package(s): ",
+    paste(.missing_pkgs, collapse = ", "),
+    ".\nInstall them with:\n  install.packages(c(",
+    paste(sprintf('"%s"', .missing_pkgs), collapse = ", "),
+    "))",
+    call. = FALSE
+  )
 }
 
 library(shiny)
@@ -49,6 +64,9 @@ parse_fasta <- function(filepath, source_name = "file") {
 }
 
 parse_fastq <- function(filepath, source_name = "file") {
+  # NOTE: assumes strict 4-line FASTQ records (header / sequence / '+' /
+  # quality). Multi-line sequence or quality blocks are not supported; such
+  # files should be reformatted to 4-line records before upload.
   lines <- readLines(filepath, warn = FALSE)
   n_lines <- length(lines)
   if (n_lines < 4) return(NULL)
@@ -152,7 +170,12 @@ apply_filters <- function(df, min_len = 0, max_len = Inf,
 deduplicate_seqs <- function(df, method = "sequence", keep = "first",
                              case_insensitive = TRUE) {
   n <- nrow(df)
-  
+
+  # NOTE: for exact-match dedup the MD5 hashing below is not strictly needed --
+  # duplicated()/match() on the (upper-cased) sequence strings directly would
+  # give identical groupings without the per-row digest() cost. Hashing is
+  # kept here so keys stay short/uniform (headers can be long) and to mirror
+  # the seq_hash column produced upstream; a future perf pass could drop it.
   if (case_insensitive) {
     seq_for_key <- toupper(df$sequence)
     hash_key <- vapply(seq_for_key, function(s) digest(s, algo = "md5"),
